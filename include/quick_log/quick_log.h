@@ -71,21 +71,37 @@ const char* ansi_reset(void);
 
 const char* log_level_str(log_level);
 void q_log(log_level, const char* const, ...);
+void q_log_br(void);
+void q_log_head(const char* const, ...);
 
-#define QDBG(msg, ...)  do { q_log(LOG_LEVEL_DEBUG, msg, ...); } while (0)
-#define QINFO(msg, ...) do { q_log(LOG_LEVEL_INFO , msg, ...); } while (0)
-#define QWARN(msg, ...) do { q_log(LOG_LEVEL_WARN , msg, ...); } while (0)
-#define QERR(msg, ...)  do { q_log(LOG_LEVEL_ERROR, msg, ...); } while (0)
+#define qdbg(msg, ...)  do { q_log(LOG_LEVEL_DEBUG, (msg), ##__VA_ARGS__); } while (0)
+#define qinfo(msg, ...) do { q_log(LOG_LEVEL_INFO , (msg), ##__VA_ARGS__); } while (0)
+#define qwarn(msg, ...) do { q_log(LOG_LEVEL_WARN , (msg), ##__VA_ARGS__); } while (0)
+#define qerr(msg, ...)  do { q_log(LOG_LEVEL_ERROR, (msg), ##__VA_ARGS__); } while (0)
 
-#define QVAR(var) Q_DBG(#var, (var))
+#define qhead(heading, ...) do { q_log_head((heading), ##__VA_ARGS__); } while (0)
+
+void q_log_test(bool, const char* const, ...);
+
+#define qtest(cnd) do { q_log_test((cnd), #cnd); } while (0)
+#define qtest_s(cnd, msg, ...) do { q_log_test((cnd), msg, ##__VA_ARGS__); } while (0)
+
+void q_log_assert_ext(bool, const char*, int, const char* const, ...);
+
+#define qassert(cnd) do { q_log_assert_ext((cnd), __FILE__, __LINE__, #cnd); } while (0)
+
+#define qassert_s(cnd, msg, ...) do { \
+    q_log_assert_ext((cnd), __FILE__, __LINE__, msg, ##__VA_ARGS__); \
+} while (0)
 
 #ifdef QUICK_LOG_IMPL
 
 #include <stdio.h>
 #include <stdarg.h>
+#include <stdlib.h>
 
 static const char* TAGS[] = { "DBUG", "INFO", "WARN", "ERRO" };
-static const ansi_color COLOR[] = { ANSI_BLUE, ANSI_GREEN, ANSI_YELLOW, ANSI_RED };
+static const ansi_color COLOR[] = { ANSI_CYAN, ANSI_GREEN, ANSI_YELLOW, ANSI_RED };
 
 const char* ansi_style_str(ansi_style code)
 {
@@ -106,21 +122,60 @@ const char* ansi_reset(void) { return "\033[0m"; }
 const char* log_level_str(log_level lvl)
 {
     static char buf[32];
-    snprintf(buf, sizeof(buf), "\033[1;%dm[%s]\033[0m", COLOR[lvl], TAGS[lvl]);
+    snprintf(buf, sizeof(buf), "\033[%dm[%s]\033[0m", COLOR[lvl], TAGS[lvl]);
     return buf;
 }
+
+#define _LOG_FMT_ARGS(f_str) do { \
+    va_list args;                 \
+    va_start(args, f_str);        \
+    vprintf(f_str, args);         \
+    va_end(args);                 \
+} while (0)
 
 void q_log(log_level lvl, const char* const msg, ...)
 {
     printf("%s : ", log_level_str(lvl));
-
-    va_list args;
-    va_start(args, msg);
-    vprintf(msg, args);
-    va_end(args);
-
+    _LOG_FMT_ARGS(msg);
     printf("\n");
 }
+
+void q_log_br(void) { printf("\n---\n"); }
+
+void q_log_head(const char* const heading, ...)
+{
+    printf("---\n");
+    printf("%s", ansi_style_str(ANSI_BOLD));
+    _LOG_FMT_ARGS(heading);
+    printf("%s", ansi_reset());
+    printf("\n---\n");
+}
+
+void q_log_test(bool cnd, const char* const msg, ...)
+{
+    char* cnd_res   = (cnd) ? "[PASS]" : "[FAIL]";
+    ansi_color code = (cnd) ? ANSI_GREEN : ANSI_RED;
+
+    printf("%s[TEST]%s", ansi_color_str(ANSI_BLUE), ansi_reset());
+    printf("%s%s%s : ", ansi_color_str(code), cnd_res, ansi_reset());
+    _LOG_FMT_ARGS(msg);
+    printf("\n");
+}
+
+void q_log_assert_ext(bool cnd, const char* file, int line, const char* const msg, ...)
+{
+    if (cnd) return;
+
+    printf("%s[ASSERT]%s", ansi_color_str(ANSI_BG_RED), ansi_reset());
+    printf(
+        "%s[%s:%d]%s : ",
+        ansi_style_str(ANSI_BOLD), file, line, ansi_reset()
+    );
+    _LOG_FMT_ARGS(msg);
+    exit(EXIT_FAILURE);
+}
+
+#undef _LOG_FMT_ARGS
 
 #endif // QUICK_LOG_IMPL
 
