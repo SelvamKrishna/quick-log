@@ -1,5 +1,12 @@
-#ifndef _QUICK_LOG_H
-#define _QUICK_LOG_H
+#ifndef QUICK_LOG_H
+#define QUICK_LOG_H
+
+#include <stdbool.h>
+#include <stdint.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 typedef enum {
     ANSI_RESET          = 0,
@@ -51,4 +58,74 @@ typedef enum {
     ANSI_BG_EX_WHITE    = 107,
 } ansi_color;
 
-#endif // _QUICK_LOG_H
+typedef enum {
+    LOG_LEVEL_DEBUG,
+    LOG_LEVEL_INFO,
+    LOG_LEVEL_WARN,
+    LOG_LEVEL_ERROR,
+} log_level;
+
+const char* ansi_style_str(ansi_style);
+const char* ansi_color_str(ansi_color);
+const char* ansi_reset(void);
+
+const char* log_level_str(log_level);
+void q_log(log_level, const char* const, ...);
+
+#define QDBG(msg, ...)  do { q_log(LOG_LEVEL_DEBUG, msg, ...); } while (0)
+#define QINFO(msg, ...) do { q_log(LOG_LEVEL_INFO , msg, ...); } while (0)
+#define QWARN(msg, ...) do { q_log(LOG_LEVEL_WARN , msg, ...); } while (0)
+#define QERR(msg, ...)  do { q_log(LOG_LEVEL_ERROR, msg, ...); } while (0)
+
+#define QVAR(var) Q_DBG(#var, (var))
+
+#ifdef QUICK_LOG_IMPL
+
+#include <stdio.h>
+#include <stdarg.h>
+
+static const char* TAGS[] = { "DBUG", "INFO", "WARN", "ERRO" };
+static const ansi_color COLOR[] = { ANSI_BLUE, ANSI_GREEN, ANSI_YELLOW, ANSI_RED };
+
+const char* ansi_style_str(ansi_style code)
+{
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "\033[%dm", code);
+    return buf;
+}
+
+const char* ansi_color_str(ansi_color code)
+{
+    static char buf[16];
+    snprintf(buf, sizeof(buf), "\033[%dm", code);
+    return buf;
+}
+
+const char* ansi_reset(void) { return "\033[0m"; }
+
+const char* log_level_str(log_level lvl)
+{
+    static char buf[32];
+    snprintf(buf, sizeof(buf), "\033[1;%dm[%s]\033[0m", COLOR[lvl], TAGS[lvl]);
+    return buf;
+}
+
+void q_log(log_level lvl, const char* const msg, ...)
+{
+    printf("%s : ", log_level_str(lvl));
+
+    va_list args;
+    va_start(args, msg);
+    vprintf(msg, args);
+    va_end(args);
+
+    printf("\n");
+}
+
+#endif // QUICK_LOG_IMPL
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif // QUICK_LOG_H
