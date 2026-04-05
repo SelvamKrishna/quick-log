@@ -58,6 +58,10 @@ typedef enum {
     ANSI_BG_EX_WHITE    = 107,
 } ansi_color;
 
+const char* ansi_style_str(ansi_style);
+const char* ansi_color_str(ansi_color);
+const char* ansi_reset(void);
+
 typedef enum {
     LOG_LEVEL_DEBUG,
     LOG_LEVEL_INFO,
@@ -65,21 +69,20 @@ typedef enum {
     LOG_LEVEL_ERROR,
 } log_level;
 
-const char* ansi_style_str(ansi_style);
-const char* ansi_color_str(ansi_color);
-const char* ansi_reset(void);
-
 const char* log_level_str(log_level);
+
 void q_log(log_level, const char* const, ...);
-void q_log_br(void);
-void q_log_head(const char* const, ...);
 
 #define qdbg(msg, ...)  do { q_log(LOG_LEVEL_DEBUG, (msg), ##__VA_ARGS__); } while (0)
 #define qinfo(msg, ...) do { q_log(LOG_LEVEL_INFO , (msg), ##__VA_ARGS__); } while (0)
 #define qwarn(msg, ...) do { q_log(LOG_LEVEL_WARN , (msg), ##__VA_ARGS__); } while (0)
 #define qerr(msg, ...)  do { q_log(LOG_LEVEL_ERROR, (msg), ##__VA_ARGS__); } while (0)
 
+void q_log_hr(void);
+void q_log_head(const char* const, ...);
+
 #define qhead(heading, ...) do { q_log_head((heading), ##__VA_ARGS__); } while (0)
+#define qhr() do { q_log_hr(); } while (0)
 
 void q_log_test(bool, const char* const, ...);
 
@@ -140,15 +143,15 @@ void q_log(log_level lvl, const char* const msg, ...)
     printf("\n");
 }
 
-void q_log_br(void) { printf("\n---\n"); }
+void q_log_hr(void) { printf("---\n"); }
 
 void q_log_head(const char* const heading, ...)
 {
-    printf("---\n");
+    q_log_hr();
     printf("%s", ansi_style_str(ANSI_BOLD));
     _LOG_FMT_ARGS(heading);
-    printf("%s", ansi_reset());
-    printf("\n---\n");
+    printf("%s\n", ansi_reset());
+    q_log_hr();
 }
 
 void q_log_test(bool cnd, const char* const msg, ...)
