@@ -10,10 +10,12 @@ A _minimal_, _header-only_ logging library for **C** & **C++**.
 git clone https://github.com/SelvamKrishna/quick-log.git
 ```
 
+_or just copy the `include/quick_log` directory into your project._
+
 **Include**
 
 ```c
-#define QUICK_LOG_IMPL
+#define QUICK_LOG_IMPL // ONLY DEFINE IN ONE SOURCE FILE
 #include <quick_log/quick_log.h>
 ```
 
@@ -59,6 +61,7 @@ target_include_directories(your_target PRIVATE path/to/quick-log/include)
 
 ## Note
 
+- the `QUICK_LOG_IMPL` macro should be defined in **exactly one** source file.
 - Works in both **C and C++**.
 - No dynamic allocation.
 - Intended for **debugging**, **diagnostics**, and **lightweight testing**.

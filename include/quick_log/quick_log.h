@@ -8,7 +8,15 @@
 extern "C" {
 #endif
 
+// --- internal fn decl ---
+
 void q_log(int, const char* const, ...);
+void q_log_hr(void);
+void q_log_head(const char* const, ...);
+void q_log_test(bool, const char* const, ...);
+void q_log_assert(bool, const char*, int, const char* const, ...);
+
+// --- public API ---
 
 #define qdbg(fmt, ...) \
     do { q_log(0, (fmt), ##__VA_ARGS__); } while (0)
@@ -22,16 +30,11 @@ void q_log(int, const char* const, ...);
 #define qerr(fmt, ...) \
     do { q_log(3, (fmt), ##__VA_ARGS__); } while (0)
 
-void q_log_hr(void);
-void q_log_head(const char* const, ...);
-
 #define qhr() \
     do { q_log_hr(); } while (0)
 
 #define qhead(text, ...) \
     do { q_log_head((text), ##__VA_ARGS__); } while (0)
-
-void q_log_test(bool, const char* const, ...);
 
 #define qtest(cnd) \
     do { q_log_test((cnd), #cnd); } while (0)
@@ -39,13 +42,13 @@ void q_log_test(bool, const char* const, ...);
 #define qtest_s(cnd, fmt, ...) \
     do { q_log_test((cnd), fmt, ##__VA_ARGS__); } while (0)
 
-void q_log_assert(bool, const char*, int, const char* const, ...);
-
 #define qassert(cnd) \
     do { q_log_assert((cnd), __FILE__, __LINE__, #cnd); } while (0)
 
 #define qassert_s(cnd, fmt, ...) \
     do { q_log_assert((cnd), __FILE__, __LINE__, fmt, ##__VA_ARGS__); } while (0)
+
+// --- logic impl ---
 
 #ifdef QUICK_LOG_IMPL
 
@@ -73,6 +76,8 @@ void q_log(int lvl, const char* const msg, ...)
         _ANSI_CODE(31) "[ERRO]"
     };
 
+    if (lvl < 0 || lvl > 3) return;
+
     printf("%s%s : ", LVL_LUT[lvl], _ANSI_CODE(0));
     _LOG_FMT_ARGS(msg);
     printf("\n");
@@ -92,12 +97,12 @@ void q_log_head(const char* const heading, ...)
 void q_log_test(bool cnd, const char* const msg, ...)
 {
     static const char* TEST_LUT[] = {
-        _ANSI_CODE(32) "[PASS]",
         _ANSI_CODE(31) "[FAIL]",
+        _ANSI_CODE(32) "[PASS]",
     };
 
     printf("%s[TEST]%s", _ANSI_CODE(34), _ANSI_CODE(0));
-    printf("%s%s : ", TEST_LUT[cnd], _ANSI_CODE(0));
+    printf("%s%s : ", TEST_LUT[cnd ? 1 : 0], _ANSI_CODE(0));
     _LOG_FMT_ARGS(msg);
     printf("\n");
 }
