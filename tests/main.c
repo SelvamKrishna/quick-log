@@ -1,4 +1,4 @@
-// #define QUICK_LOG_IMPL // flags the implementation of the library
+#define QUICK_LOG_IMPL // flags the implementation of the library
 #include <quick_log/quick_log.h>
 
 int main(void)

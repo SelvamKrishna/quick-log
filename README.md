@@ -41,7 +41,7 @@ target_include_directories(your_target PRIVATE path/to/quick-log/include)
 | `qwarn(msg)` | Warning Message       |
 | `qerr(msg)`  | Error Message         |
 
-**Logging**
+**Structure**
 
 | Macro         | Description           |
 | ------------- | --------------------- |
