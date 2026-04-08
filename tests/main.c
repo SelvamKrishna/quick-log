@@ -10,7 +10,17 @@ int main(void)
     qinfo("Initialized renderer");
     qwarn("Engine can be initialized only one");
     qerr("Process failed with code = %d", 404);
+
+    q_log(-1, "Calling `q_log()` with invalid log level");
+
     // qerr_ex("Will kill the program"); // Uncomment to test
+
+    qdbg_m("Debug Message", "Example debugging message.");
+    qinfo_m("Information Message", "Example informational message.");
+    qwarn_m("Warning Message", "Example warning message.");
+    qerr_m("Error Message", "Example error message.");
+
+    q_log_msg(-1, "Unknown Message", "Calling `q_log()` with invalid log level");
 
     size_t line_n = 0;
     qlog_head("Styles Showcase");

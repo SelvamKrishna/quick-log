@@ -11,6 +11,7 @@ extern "C" {
 // --- internal fn decl ---
 
 void q_log(int, const char* const, ...);
+void q_log_msg(int, const char* const, const char* const, ...);
 
 void q_log_hr(void);
 void q_log_br(void);
@@ -29,14 +30,26 @@ void q_log_assert(bool, const char*, int, const char* const, ...);
 #define qdbg(fmt, ...) \
     do { q_log(0, (fmt), ##__VA_ARGS__); } while (0)
 
+#define qdbg_m(title, fmt, ...) \
+    do { q_log_msg(0, (title), (fmt), ##__VA_ARGS__); } while (0)
+
 #define qinfo(fmt, ...) \
     do { q_log(1, (fmt), ##__VA_ARGS__); } while (0)
+
+#define qinfo_m(title, fmt, ...) \
+    do { q_log_msg(1, (title), (fmt), ##__VA_ARGS__); } while (0)
 
 #define qwarn(fmt, ...) \
     do { q_log(2, (fmt), ##__VA_ARGS__); } while (0)
 
+#define qwarn_m(title, fmt, ...) \
+    do { q_log_msg(2, (title), (fmt), ##__VA_ARGS__); } while (0)
+
 #define qerr(fmt, ...) \
     do { q_log(3, (fmt), ##__VA_ARGS__); } while (0)
+
+#define qerr_m(title, fmt, ...) \
+    do { q_log_msg(3, (title), (fmt), ##__VA_ARGS__); } while (0)
 
 #define qerr_ex(fmt, ...) \
     do { q_log(3, (fmt), ##__VA_ARGS__); exit(EXIT_FAILURE); } while (0)
@@ -104,12 +117,29 @@ void q_log(int lvl, const char* const msg, ...)
         _ANSI(36) "[DBUG]",
         _ANSI(32) "[INFO]",
         _ANSI(33) "[WARN]",
-        _ANSI(31) "[ERRO]"
+        _ANSI(31) "[ERRO]",
+        _ANSI(30) "[UNKN]",
     };
 
-    if (lvl < 0 || lvl > 3) return;
+    if (lvl < 0 || lvl > 3) lvl = 4;
 
     printf("%s%s : ", LVL_LUT[lvl], _ANSI(0));
+    _LOG_FMT(msg);
+    printf("\n");
+}
+
+void q_log_msg(int lvl, const char* const title, const char* const msg, ...)
+{
+    static const char* LVL_LUT[] = {
+        _ANSI(36) "[>]",
+        _ANSI(32) "[*]",
+        _ANSI(33) "[?]",
+        _ANSI(31) "[!]",
+        _ANSI(30) "[:]"
+    };
+
+    if (lvl < 0 || lvl > 3) lvl = 4;
+    printf(_ANSI_WRAP(1, "%s %s :\n    "), LVL_LUT[lvl], title);
     _LOG_FMT(msg);
     printf("\n");
 }
